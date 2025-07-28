@@ -1,0 +1,767 @@
+openapi: 3.0.3
+info:
+  title: 'REFORMERS Digital Twin: Model Repository API'
+  description: |
+    This API provides access to the REFORMERS Digital Twin Model Repository.
+
+    _Funding acknowledgement_:
+    The [REFORMERS project](https://reformers-energyvalleys.eu) has received funding from the European Union’s research and innovation programme Horizon Europe under the [Grant Agreement No.101136211](https://cordis.europa.eu/project/id/101136211)
+  license:
+    name: BSD-2-Clause
+    url: https://opensource.org/license/bsd-2-clause
+  version: v0.1
+  x-logo:
+    url: https://reformers-energyvalleys.eu/root/wp-content/themes/rerformers-theme/assets/img/logo-reformers.svg
+    href: https://reformers-energyvalleys.eu
+servers:
+  - url: https://reformers-dev.vlab-central.ait.ac.at
+  - url: https://reformers-dev.ait.ac.at
+tags:
+  - name: Repository settings
+    description: List the repositories and their settings
+  - name: Search repository
+    description: Search the repository for available components and assets
+  - name: Retrieve manifests
+    description: Retrieve manifests for container images from Docker registry
+  - name: Retrieve blobs
+    description: Retrieve blobs for container images from Docker registry
+  - name: Handle artifacts
+    description: Handle arbitrary artifacts (in a Maven repository)
+externalDocs:
+  description: Find out more about REFORMERS
+  url: https://reformers-energyvalleys.eu
+paths:
+  /service/rest/v1/repositorySettings:
+    get:
+      summary: Retrieve information about available components in the repository.
+      tags:
+        - Repository settings
+      operationId: repository_settings
+      security:
+        - BasicHttpAuthentication: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/repository_settings_list'
+  /service/rest/v1/search:
+    get:
+      summary: Retrieve information about available components in the repository.
+      tags:
+        - Search repository
+      operationId: search_components
+      security:
+        - NoAuthentication: []
+      parameters:
+        - name: continuationToken
+          in: query
+          required: false
+          schema:
+            type: string
+            description: A token returned by a prior request. If present, the next page of results are returned
+        - name: repository
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Repository name
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Query by format
+            enum:
+              - docker
+              - maven2
+        - name: group
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Component group
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Component name
+        - name: version
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Component version
+        - name: docker.imageTag
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Docker image tag
+        - name: maven.extension
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Maven extension of component's asset
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/repository_search_result'
+  /service/rest/v1/search/assets:
+    get:
+      summary: Retrieve information about available assets in the repository.
+      tags:
+        - Search repository
+      operationId: search_assets
+      security:
+        - NoAuthentication: []
+      parameters:
+        - name: continuationToken
+          in: query
+          required: false
+          schema:
+            type: string
+            description: A token returned by a prior request. If present, the next page of results are returned
+        - name: repository
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Repository name
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Query by format
+            enum:
+              - docker
+              - maven2
+        - name: group
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Component group
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Component name
+        - name: version
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Component version
+        - name: docker.imageTag
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Docker image tag
+        - name: maven.extension
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Maven extension of component's asset
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/repository_search_result'
+  /repository/model-generators/v2/{generator-name}/manifests/{generator-tag}:
+    get:
+      summary: Retrieve manifest of model generator image from the repository.
+      tags:
+        - Retrieve manifests
+      operationId: get_manifest_generator
+      security:
+        - NoAuthentication: []
+      parameters:
+        - name: generator-name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model generator name
+        - name: generator-tag
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model generator version
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/manifest'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/manifest_not_found'
+  /repository/model-images/v2/{generator-name}/{generator-tag}/{model-name}/manifests/{model-tag}:
+    get:
+      summary: Retrieve manifest of model image from the repository.
+      tags:
+        - Retrieve manifests
+      operationId: get_manifest_model
+      security:
+        - NoAuthentication: []
+      parameters:
+        - name: generator-name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model generator name
+        - name: generator-tag
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model generator version
+        - name: model-name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model name
+        - name: model-tag
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model version
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/manifest'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/manifest_not_found'
+  /repository/model-generators/v2/{generator-name}/blobs/{digest}:
+    get:
+      summary: Retrieve blob of model generator image from the repository.
+      tags:
+        - Retrieve blobs
+      operationId: get_blob_generator
+      security:
+        - NoAuthentication: []
+      parameters:
+        - name: generator-name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model generator name
+        - name: digest
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^sha256:\b[A-Fa-f0-9]{64}\b
+            description: SHA256-based hash of a blob
+      responses:
+        '200':
+          description: Success
+          content:
+            application/vnd.docker.container.image.v1+json:
+              schema:
+                $ref: '#/components/schemas/container_info'
+            application/vnd.docker.image.rootfs.diff.tar.gzip:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/blob_not_found'
+  /repository/model-images/v2/{generator-name}/{generator-tag}/{model-name}/blobs/{digest}:
+    get:
+      summary: Retrieve blob of model image from the repository.
+      tags:
+        - Retrieve blobs
+      operationId: get_blob_model
+      security:
+        - NoAuthentication: []
+      parameters:
+        - name: generator-name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model generator name
+        - name: generator-tag
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model generator version
+        - name: model-name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model name
+        - name: digest
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^sha256:\b[A-Fa-f0-9]{64}\b
+            description: SHA256-based hash of a blob
+      responses:
+        '200':
+          description: Success
+          content:
+            application/vnd.docker.container.image.v1+json:
+              schema:
+                $ref: '#/components/schemas/container_info'
+            application/vnd.docker.image.rootfs.diff.tar.gzip:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/blob_not_found'
+  /service/rest/v1/components:
+    post:
+      summary: Add artifact (to Maven repository).
+      tags:
+        - Handle artifacts
+      operationId: add_artifact
+      security:
+        - BasicHttpAuthentication: []
+      parameters:
+        - name: repository
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: repository name
+            enum:
+              - model-artifacts
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/add_artifact_request'
+      responses:
+        '204':
+          description: No Content
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+  /repository/model-artifacts/{generator-name}/{generator-tag}/{model-name}/{model-tag}/{file-name}.{file-extension}:
+    get:
+      summary: Download model artifact (from Maven repository).
+      tags:
+        - Handle artifacts
+      operationId: get_artifact
+      security:
+        - NoAuthentication: []
+      parameters:
+        - name: generator-name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model generator name
+        - name: generator-tag
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model generator version
+        - name: model-name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model artifact name
+        - name: model-tag
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model artifact version
+        - name: file-name
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+            description: model artifact file name
+        - name: file-extension
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-zA-Z0-9]+$
+            description: model artifact file extension
+      responses:
+        '200':
+          description: Success
+          content:
+            '*':
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Not Found
+          content:
+            text/html:
+              schema:
+                type: string
+components:
+  securitySchemes:
+    BasicHttpAuthentication:
+      description: Basic HTTP Authentication
+      type: http
+      scheme: Basic
+    NoAuthentication:
+      description: Anonymous access
+      type: http
+      scheme: none
+  schemas:
+    repository_setting:
+      type: object
+      properties:
+        name:
+          type: string
+          description: A unique identifier for this repository
+          pattern: ^[a-zA-Z0-9\-]{1}[a-zA-Z0-9_\-\.]*$
+          example: model-images
+        format:
+          type: string
+          description: Component format held in this repository
+          example: docker
+        type:
+          type: string
+          description: Controls if deployments of and updates to artifacts are allowed
+          enum:
+            - hosted
+            - proxy
+            - group
+          example: hosted
+        url:
+          type: string
+          format: uri
+          description: URL to the repository
+        online:
+          type: boolean
+          description: Whether this repository accepts incoming requests
+          example: true
+      additionalProperties: true
+      required:
+        - name
+        - format
+        - type
+        - url
+        - online
+    repository_settings_list:
+      type: array
+      title: List of Repository settings
+      items:
+        $ref: '#/components/schemas/repository_setting'
+    asset_info:
+      type: object
+      title: asset info
+      properties:
+        downloadUrl:
+          type: string
+          example: https://reformers-dev.ait.ac.at/repository/model-generators/v2/generator1/manifests/latest-dev
+        path:
+          type: string
+          example: v2/generator1/manifests/latest-dev
+        id:
+          type: string
+          example: bW9kZWwtZ2VuZXJhdG9yczowZTgyNzc5MDcxODY1MGI1N2RmODgzZThjNDM2NmJiYw
+        repository:
+          type: string
+          example: model-generators
+        format:
+          type: string
+          example: docker
+        checksum:
+          type: object
+          example:
+            sha1: 4e6c790bb91b94639374730b571a5f7920ea39cf
+            sha256: f74d85f0f07ebe00ca0f2fd78f63014dae9a48fa3db476a643b06934501dffbc
+        contentType:
+          type: string
+          example: application/vnd.docker.distribution.manifest.v2+json
+        lastModified:
+          type: string
+          example: '2024-10-16T14:58:16.505+00:00'
+        lastDownloaded:
+          type: string
+          example: '2024-10-16T15:27:10.923+00:00'
+        uploader:
+          type: string
+          example: admin
+        uploaderIp:
+          type: string
+          example: 172.18.0.1
+        fileSize:
+          type: integer
+          example: 524
+        blobCreated:
+          type: string
+          example: null
+    repository_component_info:
+      type: object
+      title: repository component info
+      properties:
+        id:
+          type: string
+          example: bW9kZWwtZ2VuZXJhdG9yczpiY2UxN2M2YjU4MzcyZTcxMDc4Y2EzOThkZTM5OGE0OA
+        repository:
+          type: string
+          example: model-generators
+        format:
+          type: string
+          example: docker
+        group:
+          type: string
+          example: null
+        name:
+          type: string
+          example: generator1
+        version:
+          type: string
+          example: latest-dev
+        assets:
+          type: array
+          items:
+            $ref: '#/components/schemas/asset_info'
+    repository_component_info_list:
+      type: array
+      title: list of repository component infos
+      items:
+        $ref: '#/components/schemas/repository_component_info'
+    repository_search_result:
+      type: object
+      title: results from repository search
+      properties:
+        items:
+          $ref: '#/components/schemas/repository_component_info_list'
+        continuationToken:
+          type: string
+    manifest_layer_info:
+      type: object
+      properties:
+        mediaType:
+          type: string
+        size:
+          type: integer
+        digest:
+          type: string
+      example:
+        mediaType: application/vnd.docker.container.image.v1+json
+        size: '653'
+        digest: sha256:d04f4d9ca0a2cf74c4975c36fff511df7e7a74acd73fd390d21ab64b6d00376f
+    manifest:
+      type: object
+      properties:
+        schemaVersion:
+          type: integer
+          example: 2
+        mediaType:
+          type: string
+          example: application/vnd.docker.distribution.manifest.v2+json
+        config:
+          $ref: '#/components/schemas/manifest_layer_info'
+        layers:
+          type: array
+          items:
+            $ref: '#/components/schemas/manifest_layer_info'
+          example:
+            - mediaType: application/vnd.docker.image.rootfs.diff.tar.gzip
+              size: '2457'
+              digest: sha256:719385e32844401d57ecfd3eacab360bf551a1491c05b85806ed8f1b08d792f6
+    manifest_not_found:
+      type: object
+      title: manifest not found error
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                example: MANIFEST_UNKNOWN
+              message:
+                type: string
+                example: manifest unknown
+              detail:
+                type: array
+                items:
+                  type: object
+                example:
+                  - Name: generator1
+                  - Tag: v234
+    container_info:
+      type: object
+      properties:
+        architecture:
+          type: string
+          example: amd64
+        created:
+          type: string
+          format: timestamp
+          example: '2023-05-04T17:37:03.872958712Z'
+        os:
+          type: string
+          example: linux
+        config:
+          type: object
+          properties:
+            Env:
+              type: array
+              items:
+                type: string
+              example:
+                - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+            Cmd:
+              type: array
+              items:
+                type: string
+              example:
+                - /hello
+            Labels:
+              type: object
+              additionalProperties:
+                type: string
+              example:
+                generator2.baz2: qux2
+                generator2.opt.o-baz2: o-qux2
+        history:
+          type: array
+          items:
+            type: object
+          example:
+            - created: '2023-05-04T17:37:03.801840823Z'
+              created_by: '/bin/sh -c #(nop) COPY file:201f8f1849e89d53be9f6aa76937f5e209d745abfd15a8552fcf2ba45ab267f9 in / '
+            - created: '2023-05-04T17:37:03.872958712Z'
+              created_by: '/bin/sh -c #(nop)  CMD ["/hello"]'
+              empty_layer: true
+      additionalProperties: true
+    blob_not_found:
+      type: object
+      title: manifest not found error
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                example: BLOB_UNKNOWN
+              message:
+                type: string
+                example: blob unknown to registry
+              detail:
+                type: string
+                example: sha256:d04f4d9ca0a2cf74c4975c36fff511df7e7a74acd73fd390d21ab64b6d00376c
+    add_artifact_request:
+      type: object
+      properties:
+        version:
+          type: string
+          description: model artifact version
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9-]+$
+        maven2.generate-pom:
+          type: boolean
+          description: generate a [POM](https://maven.apache.org/guides/introduction/introduction-to-the-pom.html) file for artifact
+          default: true
+        maven2.groupId:
+          type: string
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9-.]+[a-zA-Z0-9]$
+          description: group ID
+        maven2.artifactId:
+          type: string
+          description: artifact ID
+        maven2.asset1:
+          type: string
+          format: binary
+          description: artifact \#1 file content
+        maven2.asset1.extension:
+          type: string
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9.]+[a-zA-Z0-9]$
+          description: artifact \#1 file extension
+        maven2.asset1.classifier:
+          type: string
+          description: artifact \#1 classifier
+          pattern: ^[a-zA-Z0-9]+$
+        maven2.asset2:
+          type: string
+          format: binary
+          description: artifact \#2 file content
+        maven2.asset2.extension:
+          type: string
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9.]+[a-zA-Z0-9]$
+          description: artifact \#2 file extension
+        maven2.asset2.classifier:
+          type: string
+          pattern: ^[a-zA-Z0-9]+$
+          description: artifact \#2 classifier
+        maven2.asset3:
+          type: string
+          format: binary
+          description: artifact \#3 file content
+        maven2.asset3.extension:
+          type: string
+          pattern: ^[a-zA-Z0-9][a-zA-Z0-9.]+[a-zA-Z0-9]$
+          description: artifact \#3 file extension
+        maven2.asset3.classifier:
+          type: string
+          pattern: ^[a-zA-Z0-9]+$
+          description: artifact \#3 classifier
+      required:
+        - version
